@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Explore | SocialMedia</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="nav-container">
+        <a href="/feed" class="nav-logo"><i class="fas fa-bolt"></i> SocialMedia</a>
+        <div class="nav-search">
+            <form action="/explore" method="get" id="searchForm">
+                <div class="search-input-wrap">
+                    <i class="fas fa-search"></i>
+                    <input type="text" name="search" placeholder="Search posts..."
+                           th:value="${searchQuery}"/>
+                </div>
+            </form>
+        </div>
+        <div class="nav-links" th:if="${currentUser != null}">
+            <a href="/feed" title="Feed"><i class="fas fa-home"></i></a>
+            <a href="/explore" class="active" title="Explore"><i class="fas fa-compass"></i></a>
+            <a th:href="@{/profile/{u}(u=${currentUser.username})}" title="Profile"><i class="fas fa-user"></i></a>
+            <form th:action="@{/logout}" method="post" style="display:inline;">
+                <button type="submit" class="nav-logout" title="Logout"><i class="fas fa-sign-out-alt"></i></button>
+            </form>
+        </div>
+        <div class="nav-links" th:unless="${currentUser != null}">
+            <a href="/login" class="btn btn-outline">Log In</a>
+            <a href="/register" class="btn btn-primary">Sign Up</a>
+        </div>
+    </div>
+</nav>
+
+<div class="explore-page">
+    <div class="explore-header">
+        <h2>
+            <i class="fas fa-compass"></i>
+            <span th:if="${searchQuery}">Results for "<span th:text="${searchQuery}"></span>"</span>
+            <span th:unless="${searchQuery}">Explore</span>
+        </h2>
+        <p th:unless="${searchQuery}">Discover what's happening in the community</p>
+    </div>
+
+    <!-- Search bar prominent -->
+    <div class="explore-search-bar">
+        <form action="/explore" method="get">
+            <div class="search-big-wrap">
+                <i class="fas fa-search"></i>
+                <input type="text" name="search" placeholder="Search posts by keyword..."
+                       th:value="${searchQuery}" autofocus/>
+                <button type="submit" class="btn btn-primary">Search</button>
+            </div>
+        </form>
+    </div>
+
+    <div th:if="${#lists.isEmpty(posts)}" class="empty-state">
+        <i class="fas fa-search"></i>
+        <h3 th:if="${searchQuery}">No posts found for "<span th:text="${searchQuery}"></span>"</h3>
+        <h3 th:unless="${searchQuery}">No posts yet</h3>
+        <p>Be the first to post something!</p>
+        <a href="/register" class="btn btn-primary" th:if="${currentUser == null}">Join Now</a>
+        <a href="/feed" class="btn btn-primary" th:if="${currentUser != null}">Go to Feed</a>
+    </div>
+
+    <div class="explore-posts">
+        <div th:each="post : ${posts}" class="post-card">
+            <div class="post-header">
+                <a th:href="@{/profile/{u}(u=${post.author.username})}">
+                    <img th:src="${post.author.profilePicture}" th:alt="${post.author.username}" class="avatar"/>
+                </a>
+                <div class="post-meta">
+                    <a th:href="@{/profile/{u}(u=${post.author.username})}" class="post-author"
+                       th:text="${post.author.fullName ?: post.author.username}">Author</a>
+                    <span class="post-username" th:text="'@' + ${post.author.username}">@user</span>
+                    <span class="post-time" th:text="${#temporals.format(post.createdAt, 'MMM d, yyyy · HH:mm')}">time</span>
+                </div>
+            </div>
+            <div class="post-content">
+                <p th:text="${post.content}">Content</p>
+            </div>
+            <div class="post-footer" th:if="${currentUser != null}">
+                <form th:action="@{/post/{id}/like(id=${post.id})}" method="post" style="display:inline;">
+                    <input type="hidden" name="returnTo" th:value="${searchQuery != null ? '/explore?search=' + searchQuery : '/explore'}"/>
+                    <button type="submit" th:class="${post.likedBy.contains(currentUser)} ? 'btn-icon liked' : 'btn-icon'">
+                        <i th:class="${post.likedBy.contains(currentUser)} ? 'fas fa-heart' : 'far fa-heart'"></i>
+                        <span th:text="${post.likesCount}">0</span>
+                    </button>
+                </form>
+                <a th:href="@{/post/{id}(id=${post.id})}" class="btn-icon">
+                    <i class="far fa-comment"></i>
+                    <span th:text="${post.commentsCount}">0</span>
+                </a>
+            </div>
+            <div class="post-footer" th:unless="${currentUser != null}">
+                <span class="btn-icon"><i class="far fa-heart"></i> <span th:text="${post.likesCount}">0</span></span>
+                <span class="btn-icon"><i class="far fa-comment"></i> <span th:text="${post.commentsCount}">0</span></span>
+                <a href="/login" class="btn btn-xs btn-primary">Login to interact</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

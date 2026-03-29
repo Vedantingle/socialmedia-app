@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Search Users | SocialMedia</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+</head>
+<body>
+<nav class="navbar">
+    <div class="nav-container">
+        <a href="/feed" class="nav-logo"><i class="fas fa-bolt"></i> SocialMedia</a>
+        <div class="nav-links">
+            <a href="/feed"><i class="fas fa-home"></i></a>
+            <a href="/explore"><i class="fas fa-compass"></i></a>
+            <a th:href="@{/profile/{u}(u=${currentUser.username})}"><i class="fas fa-user"></i></a>
+            <form th:action="@{/logout}" method="post" style="display:inline;">
+                <button type="submit" class="nav-logout"><i class="fas fa-sign-out-alt"></i></button>
+            </form>
+        </div>
+    </div>
+</nav>
+<div class="explore-page">
+    <h2><i class="fas fa-users"></i> Search Users: "<span th:text="${searchQuery}"></span>"</h2>
+
+    <div th:if="${#lists.isEmpty(users)}" class="empty-state">
+        <i class="fas fa-user-slash"></i>
+        <h3>No users found</h3>
+    </div>
+
+    <div class="users-grid">
+        <div th:each="user : ${users}" class="user-card">
+            <a th:href="@{/profile/{u}(u=${user.username})}">
+                <img th:src="${user.profilePicture}" th:alt="${user.username}" class="avatar avatar-lg"/>
+            </a>
+            <div class="user-card-info">
+                <a th:href="@{/profile/{u}(u=${user.username})}" class="post-author"
+                   th:text="${user.fullName ?: user.username}">Name</a>
+                <span class="post-username" th:text="'@' + ${user.username}">@username</span>
+                <p th:text="${user.bio}" th:if="${user.bio}" class="bio-text">Bio</p>
+                <div class="stat-row-sm">
+                    <span><strong th:text="${user.followersCount}">0</strong> followers</span>
+                </div>
+            </div>
+            <form th:action="@{/profile/{id}/follow(id=${user.id})}" method="post"
+                  th:if="${user.username != currentUser.username}">
+                <input type="hidden" name="returnTo" th:value="'/profile/search?q=' + ${searchQuery}"/>
+                <button type="submit"
+                        th:class="${currentUser.isFollowing(user)} ? 'btn btn-outline btn-sm' : 'btn btn-primary btn-sm'">
+                    <span th:text="${currentUser.isFollowing(user)} ? 'Unfollow' : 'Follow'">Follow</span>
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+</body>
+</html>

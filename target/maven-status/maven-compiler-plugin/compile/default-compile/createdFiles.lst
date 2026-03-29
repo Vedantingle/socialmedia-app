@@ -1,0 +1,14 @@
+com\socialmedia\model\Comment.class
+com\socialmedia\repository\CommentRepository.class
+com\socialmedia\repository\UserRepository.class
+com\socialmedia\service\PostService.class
+com\socialmedia\model\Post.class
+com\socialmedia\controller\AuthController.class
+com\socialmedia\SocialMediaApplication.class
+com\socialmedia\config\SecurityConfig.class
+com\socialmedia\service\UserService.class
+com\socialmedia\model\User.class
+com\socialmedia\controller\ProfileController.class
+com\socialmedia\repository\PostRepository.class
+com\socialmedia\controller\FeedController.class
+com\socialmedia\config\PasswordConfig.class

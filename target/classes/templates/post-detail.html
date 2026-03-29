@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Post | SocialMedia</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="nav-container">
+        <a href="/feed" class="nav-logo"><i class="fas fa-bolt"></i> SocialMedia</a>
+        <div class="nav-search">
+            <form action="/explore" method="get">
+                <div class="search-input-wrap">
+                    <i class="fas fa-search"></i>
+                    <input type="text" name="search" placeholder="Search posts..."/>
+                </div>
+            </form>
+        </div>
+        <div class="nav-links">
+            <a href="/feed" title="Feed"><i class="fas fa-home"></i></a>
+            <a href="/explore" title="Explore"><i class="fas fa-compass"></i></a>
+            <a th:href="@{/profile/{u}(u=${currentUser.username})}" title="Profile"><i class="fas fa-user"></i></a>
+            <form th:action="@{/logout}" method="post" style="display:inline;">
+                <button type="submit" class="nav-logout" title="Logout"><i class="fas fa-sign-out-alt"></i></button>
+            </form>
+        </div>
+    </div>
+</nav>
+
+<div class="post-detail-page">
+    <div class="post-detail-container">
+
+        <a href="/feed" class="back-link"><i class="fas fa-arrow-left"></i> Back to Feed</a>
+
+        <!-- Flash messages -->
+        <div th:if="${error}" class="alert alert-error">
+            <i class="fas fa-exclamation-circle"></i> <span th:text="${error}"></span>
+        </div>
+
+        <!-- Post -->
+        <div class="post-card post-card-detail">
+            <div class="post-header">
+                <a th:href="@{/profile/{u}(u=${post.author.username})}">
+                    <img th:src="${post.author.profilePicture}" th:alt="${post.author.username}" class="avatar"/>
+                </a>
+                <div class="post-meta">
+                    <a th:href="@{/profile/{u}(u=${post.author.username})}" class="post-author"
+                       th:text="${post.author.fullName ?: post.author.username}">Author</a>
+                    <span class="post-username" th:text="'@' + ${post.author.username}">@user</span>
+                    <span class="post-time" th:text="${#temporals.format(post.createdAt, 'MMMM d, yyyy · HH:mm')}">time</span>
+                </div>
+                <div th:if="${post.author.username == currentUser.username}">
+                    <form th:action="@{/post/{id}/delete(id=${post.id})}" method="post"
+                          onsubmit="return confirm('Delete this post?')">
+                        <button type="submit" class="btn-icon btn-danger"><i class="fas fa-trash"></i> Delete</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="post-content post-content-large">
+                <p th:text="${post.content}">Content</p>
+            </div>
+
+            <div class="post-footer">
+                <form th:action="@{/post/{id}/like(id=${post.id})}" method="post" style="display:inline;">
+                    <input type="hidden" name="returnTo" th:value="'/post/' + ${post.id}"/>
+                    <button type="submit" th:class="${post.likedBy.contains(currentUser)} ? 'btn-icon liked' : 'btn-icon'">
+                        <i th:class="${post.likedBy.contains(currentUser)} ? 'fas fa-heart' : 'far fa-heart'"></i>
+                        <span th:text="${post.likesCount} + ' likes'">0 likes</span>
+                    </button>
+                </form>
+                <span class="btn-icon">
+                    <i class="far fa-comment"></i>
+                    <span th:text="${post.commentsCount} + ' comments'">0 comments</span>
+                </span>
+            </div>
+        </div>
+
+        <!-- Comments Section -->
+        <div class="comments-section">
+            <h3><i class="fas fa-comments"></i> Comments (<span th:text="${post.commentsCount}">0</span>)</h3>
+
+            <!-- Add comment form -->
+            <div class="add-comment-form">
+                <img th:src="${currentUser.profilePicture}" th:alt="${currentUser.username}" class="avatar"/>
+                <form th:action="@{/post/{id}/comment(id=${post.id})}" method="post" class="comment-form">
+                    <input type="text" name="content" placeholder="Write a comment..." maxlength="300" required/>
+                    <button type="submit" class="btn btn-primary btn-sm">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Comment list -->
+            <div th:if="${#lists.isEmpty(post.comments)}" class="empty-comments">
+                <p>No comments yet. Be the first to comment!</p>
+            </div>
+
+            <div th:each="comment : ${post.comments}" class="comment-item">
+                <a th:href="@{/profile/{u}(u=${comment.author.username})}">
+                    <img th:src="${comment.author.profilePicture}" th:alt="${comment.author.username}" class="avatar avatar-sm"/>
+                </a>
+                <div class="comment-body">
+                    <div class="comment-header">
+                        <a th:href="@{/profile/{u}(u=${comment.author.username})}" class="comment-author"
+                           th:text="${comment.author.fullName ?: comment.author.username}">Author</a>
+                        <span class="comment-time" th:text="${#temporals.format(comment.createdAt, 'MMM d · HH:mm')}">time</span>
+                        <form th:if="${comment.author.username == currentUser.username}"
+                              th:action="@{/comment/{cid}/delete(cid=${comment.id})}" method="post">
+                            <input type="hidden" name="postId" th:value="${post.id}"/>
+                            <button type="submit" class="btn-icon btn-danger btn-xs">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </form>
+                    </div>
+                    <p class="comment-content" th:text="${comment.content}">Comment text</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

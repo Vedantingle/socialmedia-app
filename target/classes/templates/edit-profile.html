@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Edit Profile | SocialMedia</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="nav-container">
+        <a href="/feed" class="nav-logo"><i class="fas fa-bolt"></i> SocialMedia</a>
+        <div class="nav-links">
+            <a href="/feed"><i class="fas fa-home"></i></a>
+            <a href="/explore"><i class="fas fa-compass"></i></a>
+            <a th:href="@{/profile/{u}(u=${user.username})}"><i class="fas fa-user"></i></a>
+            <form th:action="@{/logout}" method="post" style="display:inline;">
+                <button type="submit" class="nav-logout"><i class="fas fa-sign-out-alt"></i></button>
+            </form>
+        </div>
+    </div>
+</nav>
+
+<div class="edit-profile-page">
+    <div class="edit-profile-card">
+        <div class="edit-profile-header">
+            <img th:src="${user.profilePicture}" th:alt="${user.username}" class="avatar avatar-xl"/>
+            <div>
+                <h2 th:text="${user.fullName ?: user.username}">Name</h2>
+                <span th:text="'@' + ${user.username}" class="username-tag">@username</span>
+            </div>
+        </div>
+
+        <form th:action="@{/profile/edit}" method="post" class="edit-form">
+            <div class="form-group">
+                <label><i class="fas fa-id-card"></i> Full Name</label>
+                <input type="text" name="fullName" th:value="${user.fullName}" placeholder="Your full name" maxlength="50"/>
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-quote-left"></i> Bio</label>
+                <textarea name="bio" rows="3" maxlength="160" placeholder="Tell us about yourself..."
+                          th:text="${user.bio}"></textarea>
+                <small>Max 160 characters</small>
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-map-marker-alt"></i> Location</label>
+                <input type="text" name="location" th:value="${user.location}" placeholder="Your city, country"/>
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-link"></i> Website</label>
+                <input type="url" name="website" th:value="${user.website}" placeholder="https://yoursite.com"/>
+            </div>
+            <div class="form-actions">
+                <a th:href="@{/profile/{u}(u=${user.username})}" class="btn btn-outline">Cancel</a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+</body>
+</html>

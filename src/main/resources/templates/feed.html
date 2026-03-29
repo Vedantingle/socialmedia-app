@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Feed | SocialMedia</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+    <div class="nav-container">
+        <a href="/feed" class="nav-logo"><i class="fas fa-bolt"></i> SocialMedia</a>
+        <div class="nav-search">
+            <form action="/explore" method="get">
+                <div class="search-input-wrap">
+                    <i class="fas fa-search"></i>
+                    <input type="text" name="search" placeholder="Search posts..."/>
+                </div>
+            </form>
+        </div>
+        <div class="nav-links">
+            <a href="/feed" class="active" title="Feed"><i class="fas fa-home"></i></a>
+            <a href="/explore" title="Explore"><i class="fas fa-compass"></i></a>
+            <a th:href="@{/profile/{u}(u=${currentUser.username})}" title="Profile"><i class="fas fa-user"></i></a>
+            <form th:action="@{/logout}" method="post" style="display:inline;">
+                <button type="submit" class="nav-logout" title="Logout"><i class="fas fa-sign-out-alt"></i></button>
+            </form>
+        </div>
+    </div>
+</nav>
+
+<div class="main-layout">
+
+    <!-- LEFT SIDEBAR -->
+    <aside class="sidebar-left">
+        <div class="profile-card">
+            <img th:src="${currentUser.profilePicture}" th:alt="${currentUser.username}" class="avatar avatar-lg"/>
+            <h3 th:text="${currentUser.fullName ?: currentUser.username}">Name</h3>
+            <p th:text="'@' + ${currentUser.username}" class="username-tag">@username</p>
+            <p th:text="${currentUser.bio}" class="bio-text" th:if="${currentUser.bio}">Bio</p>
+            <div class="stats-row">
+                <div class="stat">
+                    <strong th:text="${currentUser.postsCount}">0</strong>
+                    <span>Posts</span>
+                </div>
+                <div class="stat">
+                    <strong th:text="${currentUser.followersCount}">0</strong>
+                    <span>Followers</span>
+                </div>
+                <div class="stat">
+                    <strong th:text="${currentUser.followingCount}">0</strong>
+                    <span>Following</span>
+                </div>
+            </div>
+            <a th:href="@{/profile/{u}(u=${currentUser.username})}" class="btn btn-outline btn-sm btn-full">
+                View Profile
+            </a>
+        </div>
+
+        <div class="sidebar-nav">
+            <a href="/feed" class="sidebar-link active"><i class="fas fa-home"></i> Home</a>
+            <a href="/explore" class="sidebar-link"><i class="fas fa-compass"></i> Explore</a>
+            <a th:href="@{/profile/{u}(u=${currentUser.username})}" class="sidebar-link">
+                <i class="fas fa-user"></i> My Profile
+            </a>
+            <a href="/profile/edit" class="sidebar-link"><i class="fas fa-cog"></i> Settings</a>
+        </div>
+    </aside>
+
+    <!-- MAIN FEED -->
+    <main class="feed-main">
+
+        <!-- Flash messages -->
+        <div th:if="${success}" class="alert alert-success">
+            <i class="fas fa-check-circle"></i> <span th:text="${success}"></span>
+        </div>
+        <div th:if="${error}" class="alert alert-error">
+            <i class="fas fa-exclamation-circle"></i> <span th:text="${error}"></span>
+        </div>
+
+        <!-- Create Post Box -->
+        <div class="create-post-card">
+            <div class="create-post-top">
+                <img th:src="${currentUser.profilePicture}" th:alt="${currentUser.username}" class="avatar"/>
+                <div class="create-post-input-area" onclick="document.getElementById('postContent').focus()">
+                    <span>What's on your mind, <span th:text="${currentUser.fullName ?: currentUser.username}">User</span>?</span>
+                </div>
+            </div>
+            <form th:action="@{/post/create}" method="post" class="create-post-form" id="createPostForm">
+                <textarea id="postContent" name="content" placeholder="Share your thoughts..."
+                          maxlength="500" rows="3"></textarea>
+                <div class="create-post-footer">
+                    <span class="char-counter"><span id="charCount">0</span>/500</span>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane"></i> Post
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Posts -->
+        <div th:if="${#lists.isEmpty(posts)}" class="empty-state">
+            <i class="fas fa-newspaper"></i>
+            <h3>Your feed is empty</h3>
+            <p>Follow some users to see their posts here!</p>
+            <a href="/explore" class="btn btn-primary">Explore Posts</a>
+        </div>
+
+        <div th:each="post : ${posts}" class="post-card">
+            <div class="post-header">
+                <a th:href="@{/profile/{u}(u=${post.author.username})}">
+                    <img th:src="${post.author.profilePicture}" th:alt="${post.author.username}" class="avatar"/>
+                </a>
+                <div class="post-meta">
+                    <a th:href="@{/profile/{u}(u=${post.author.username})}" class="post-author"
+                       th:text="${post.author.fullName ?: post.author.username}">Author</a>
+                    <span class="post-username" th:text="'@' + ${post.author.username}">@user</span>
+                    <span class="post-time" th:text="${#temporals.format(post.createdAt, 'MMM d, yyyy · HH:mm')}">time</span>
+                </div>
+                <div class="post-actions-menu" th:if="${post.author.username == currentUser.username}">
+                    <form th:action="@{/post/{id}/delete(id=${post.id})}" method="post"
+                          onsubmit="return confirm('Delete this post?')">
+                        <button type="submit" class="btn-icon btn-danger" title="Delete post">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="post-content">
+                <p th:text="${post.content}">Post content</p>
+            </div>
+
+            <div class="post-footer">
+                <!-- Like -->
+                <form th:action="@{/post/{id}/like(id=${post.id})}" method="post" style="display:inline;">
+                    <input type="hidden" name="returnTo" value="/feed"/>
+                    <button type="submit" th:class="${post.likedBy.contains(currentUser)} ? 'btn-icon liked' : 'btn-icon'">
+                        <i th:class="${post.likedBy.contains(currentUser)} ? 'fas fa-heart' : 'far fa-heart'"></i>
+                        <span th:text="${post.likesCount}">0</span>
+                    </button>
+                </form>
+                <!-- Comment -->
+                <a th:href="@{/post/{id}(id=${post.id})}" class="btn-icon">
+                    <i class="far fa-comment"></i>
+                    <span th:text="${post.commentsCount}">0</span>
+                </a>
+                <!-- Share (copy link) -->
+                <button class="btn-icon" onclick="copyLink(this)" th:data-url="@{/post/{id}(id=${post.id})}">
+                    <i class="fas fa-share"></i>
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- RIGHT SIDEBAR -->
+    <aside class="sidebar-right">
+        <div class="sidebar-widget">
+            <h4 class="widget-title">Who to Follow</h4>
+            <div th:if="${#lists.isEmpty(suggestions)}" class="empty-suggestions">
+                <p>No suggestions right now!</p>
+            </div>
+            <div th:each="user : ${suggestions}" class="suggestion-item">
+                <a th:href="@{/profile/{u}(u=${user.username})}">
+                    <img th:src="${user.profilePicture}" th:alt="${user.username}" class="avatar avatar-sm"/>
+                </a>
+                <div class="suggestion-info">
+                    <a th:href="@{/profile/{u}(u=${user.username})}" class="suggestion-name"
+                       th:text="${user.fullName ?: user.username}">Name</a>
+                    <span th:text="'@' + ${user.username}" class="suggestion-username">@user</span>
+                </div>
+                <form th:action="@{/profile/{id}/follow(id=${user.id})}" method="post">
+                    <input type="hidden" name="returnTo" value="/feed"/>
+                    <button type="submit" class="btn btn-outline btn-xs">Follow</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="sidebar-widget">
+            <h4 class="widget-title">Quick Links</h4>
+            <div class="quick-links">
+                <a href="/explore">🔍 Explore</a>
+                <a href="/h2-console" target="_blank">🗄️ DB Console</a>
+                <a href="/profile/edit">⚙️ Settings</a>
+            </div>
+        </div>
+    </aside>
+
+</div>
+
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>
